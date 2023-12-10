@@ -1,2 +1,2 @@
-# UPFD
-code for User Preference-aware Fake News Detection
+# Fake news detection
+Elaman ne sdelal readme
