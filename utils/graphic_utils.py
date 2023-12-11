@@ -13,6 +13,7 @@ def plot_figure(y1,
 	x = range(epochs)
 	plt.plot(x, y1, label=y1_label)
 	plt.plot(x, y2, label=y2_label)
+	plt.suptitle(f"Model: {model_name.upper()}\nFeatures: {feature}")
 	plt.legend(loc="upper left")
 	plt.ylabel(y_label)
 	plt.xlabel('Epochs')
