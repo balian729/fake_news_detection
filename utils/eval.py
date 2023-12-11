@@ -1,3 +1,5 @@
+import torch
+import torch.nn.functional as F
 from sklearn.metrics import (
     f1_score, 
 	accuracy_score, 
@@ -5,6 +7,7 @@ from sklearn.metrics import (
 	precision_score, 
 	roc_auc_score, average_precision_score
 )
+
 
 """
 	Utility functions for evaluating the model performance
@@ -45,3 +48,19 @@ def eval_deep(log, loader):
 	ap = average_precision_score(label_log, prob_log)
 
 	return accuracy/data_size, f1_macro/data_size, f1_micro/data_size, precision/data_size, recall/data_size, auc, ap
+
+def compute_test(model, loader, device=torch.device('cpu'), verbose=False):
+	model.eval()
+	with torch.no_grad():
+		loss_test = 0.0
+		out_log = []
+		for data in loader:
+			data = data.to(device)
+			out = model(data)
+			y = data.y
+			if verbose:
+				print(F.softmax(out, dim=1).cpu().numpy())
+			out_log.append([F.softmax(out, dim=1), y])
+			loss_test += F.nll_loss(out, y).item()
+	loss_test /= len(loader)
+	return eval_deep(out_log, loader), loss_test

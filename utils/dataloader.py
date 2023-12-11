@@ -93,54 +93,9 @@ class ToUndirected:
 		return data
 
 
-class DropEdge:
-	def __init__(self, tddroprate, budroprate):
-		"""
-		Drop edge operation from BiGCN (Rumor Detection on Social Media with Bi-Directional Graph Convolutional Networks)
-		1) Generate TD and BU edge indices
-		2) Drop out edges
-		Code from https://github.com/TianBian95/BiGCN/blob/master/Process/dataset.py
-		"""
-		self.tddroprate = tddroprate
-		self.budroprate = budroprate
-
-	def __call__(self, data):
-		edge_index = data.edge_index
-
-		if self.tddroprate > 0:
-			row = list(edge_index[0])
-			col = list(edge_index[1])
-			length = len(row)
-			poslist = random.sample(range(length), int(length * (1 - self.tddroprate)))
-			poslist = sorted(poslist)
-			row = list(np.array(row)[poslist])
-			col = list(np.array(col)[poslist])
-			new_edgeindex = [row, col]
-		else:
-			new_edgeindex = edge_index
-
-		burow = list(edge_index[1])
-		bucol = list(edge_index[0])
-		if self.budroprate > 0:
-			length = len(burow)
-			poslist = random.sample(range(length), int(length * (1 - self.budroprate)))
-			poslist = sorted(poslist)
-			row = list(np.array(burow)[poslist])
-			col = list(np.array(bucol)[poslist])
-			bunew_edgeindex = [row, col]
-		else:
-			bunew_edgeindex = [burow, bucol]
-
-		data.edge_index = torch.LongTensor(new_edgeindex)
-		data.BU_edge_index = torch.LongTensor(bunew_edgeindex)
-		data.root = torch.FloatTensor(data.x[0])
-		data.root_index = torch.LongTensor([0])
-
-		return data
-
 
 class FNNDataset(InMemoryDataset):
-	r"""
+	"""
 		The Graph datasets built upon FakeNewsNet data
 
 	Args:
@@ -225,3 +180,49 @@ class FNNDataset(InMemoryDataset):
 
 	def __repr__(self):
 		return '{}({})'.format(self.name, len(self))
+	
+
+class DropEdge:
+	def __init__(self, tddroprate, budroprate):
+		"""
+		Drop edge operation from BiGCN (Rumor Detection on Social Media with Bi-Directional Graph Convolutional Networks)
+		1) Generate TD and BU edge indices
+		2) Drop out edges
+		Code from https://github.com/TianBian95/BiGCN/blob/master/Process/dataset.py
+		"""
+		self.tddroprate = tddroprate
+		self.budroprate = budroprate
+
+	def __call__(self, data):
+		edge_index = data.edge_index
+
+		if self.tddroprate > 0:
+			row = list(edge_index[0])
+			col = list(edge_index[1])
+			length = len(row)
+			poslist = random.sample(range(length), int(length * (1 - self.tddroprate)))
+			poslist = sorted(poslist)
+			row = list(np.array(row)[poslist])
+			col = list(np.array(col)[poslist])
+			new_edgeindex = [row, col]
+		else:
+			new_edgeindex = edge_index
+
+		burow = list(edge_index[1])
+		bucol = list(edge_index[0])
+		if self.budroprate > 0:
+			length = len(burow)
+			poslist = random.sample(range(length), int(length * (1 - self.budroprate)))
+			poslist = sorted(poslist)
+			row = list(np.array(burow)[poslist])
+			col = list(np.array(bucol)[poslist])
+			bunew_edgeindex = [row, col]
+		else:
+			bunew_edgeindex = [burow, bucol]
+
+		data.edge_index = torch.LongTensor(new_edgeindex)
+		data.BU_edge_index = torch.LongTensor(bunew_edgeindex)
+		data.root = torch.FloatTensor(data.x[0])
+		data.root_index = torch.LongTensor([0])
+
+		return data
