@@ -8,6 +8,7 @@ def plot_figure(y1,
 				y2_label="Val loss", 
 				file_name="Train_val_loss.png", 
 				model_name="gnn",
+				feature='content',
 				epochs=60):
 	x = range(epochs)
 	plt.plot(x, y1, label=y1_label)
@@ -17,6 +18,7 @@ def plot_figure(y1,
 	plt.xlabel('Epochs')
 	if not os.path.isdir('reports/figures/'+model_name):
 		os.mkdir('reports/figures/'+model_name)
-	
-	plt.savefig(os.path.join('reports/figures/', model_name, file_name))
+	if not os.path.isdir('reports/figures/'+model_name+'/'+feature):
+		os.mkdir('reports/figures/'+model_name+'/'+feature)
+	plt.savefig(os.path.join('reports/figures/', model_name, feature, file_name))
 	plt.clf()
