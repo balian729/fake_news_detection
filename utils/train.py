@@ -10,6 +10,13 @@ def train(model, train_loader, val_loader, args):
 	optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 	model.train()
 
+	best_loss_val = 1e9
+	best_metrics = {
+		"acc": 0,
+		"auc": 0,
+		"loss": 0,
+		"F1": 0
+	}
 	loop = trange(args.epochs)
 
 	train_loss_list = []
@@ -20,12 +27,9 @@ def train(model, train_loader, val_loader, args):
 
 	train_auc_list = []
 	val_auc_list = []
-	
-	train_f1_micro_list = []
-	val_f1_micro_list = []
 
-	train_f1_macro_list = []
-	val_f1_macro_list = []
+	train_f1_list = []
+	val_f1_list = []
 
 	for _ in loop:
 		out_log = []
@@ -40,8 +44,16 @@ def train(model, train_loader, val_loader, args):
 			optimizer.step()
 			loss_train += loss.item()
 			out_log.append([F.softmax(out, dim=1), y])
-		acc_train, f1_macro_train, f1_micro_train, precision_train, recall_train, auc_train, _ = eval_deep(out_log, train_loader)
-		[acc_val, f1_macro_val, f1_micro_val, _, recall_val, auc_val, _], loss_val = compute_test(model, val_loader, args.device)
+		acc_train, f1_train, precision_train, recall_train, auc_train = eval_deep(out_log, train_loader)
+		[acc_val, f1_val, _, recall_val, auc_val, loss_val] = compute_test(model, val_loader, args.device)
+
+		if loss_val < best_loss_val:
+			best_loss_val = loss_val
+			best_metrics["acc"] = acc_val
+			best_metrics["auc"] = auc_val
+			best_metrics["F1"] = f1_val
+			best_metrics["loss"] = loss_val
+
 		loop.set_postfix(
 			loss_train=loss_train,
 			acc_train=acc_train,
@@ -59,11 +71,8 @@ def train(model, train_loader, val_loader, args):
 		train_auc_list.append(auc_train)
 		val_auc_list.append(auc_val)
 
-		train_f1_macro_list.append(f1_macro_train)
-		val_f1_macro_list.append(f1_macro_val)
-
-		train_f1_micro_list.append(f1_micro_train)
-		val_f1_micro_list.append(f1_micro_val)
+		train_f1_list.append(f1_train)
+		val_f1_list.append(f1_val)
 
 	plot_figure(y_label="Loss", 
 			 y1=train_loss_list, 
@@ -93,22 +102,13 @@ def train(model, train_loader, val_loader, args):
 			 feature=args.feature,
 			 model_name=args.model)
 	plot_figure(
-			 y1=train_f1_macro_list,
-			 y2=val_f1_macro_list,
-			 y_label="F1 Macro",
-			 y1_label="Train f1 macro",
-			 y2_label="Val f1 macro",
-			 file_name="Train_val_f1_macro",
+			 y1=train_f1_list,
+			 y2=val_f1_list,
+			 y_label="F1 score",
+			 y1_label="Train f1",
+			 y2_label="Val f1",
+			 file_name="Train_val_f1",
 			 epochs=args.epochs,
 			 feature=args.feature,
 			 model_name=args.model)
-	plot_figure(
-			 y1=train_f1_micro_list,
-			 y2=val_f1_micro_list,
-			 y_label="F1 Micro",
-			 y1_label="Train f1 micro",
-			 y2_label="Val f1 micro",
-			 file_name="Train_val_f1_micro",
-			 epochs=args.epochs,
-			 feature=args.feature,
-			 model_name=args.model)
+	return best_metrics

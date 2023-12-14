@@ -29,7 +29,7 @@ def eval_deep(log, loader):
 
 	assert len(log) == len(size_list)
 
-	accuracy, f1_macro, f1_micro, precision, recall = 0, 0, 0, 0, 0
+	accuracy, f1, precision, recall = 0, 0, 0, 0
 
 	prob_log, label_log = [], []
 
@@ -39,15 +39,13 @@ def eval_deep(log, loader):
 		label_log.extend(y)
 
 		accuracy += accuracy_score(y, pred_y) * size
-		f1_macro += f1_score(y, pred_y, average='macro') * size
-		f1_micro += f1_score(y, pred_y, average='micro') * size
+		f1 += f1_score(y, pred_y, average='binary') * size
 		precision += precision_score(y, pred_y, zero_division=0) * size
 		recall += recall_score(y, pred_y, zero_division=0) * size
 
 	auc = roc_auc_score(label_log, prob_log)
-	ap = average_precision_score(label_log, prob_log)
 
-	return accuracy/data_size, f1_macro/data_size, f1_micro/data_size, precision/data_size, recall/data_size, auc, ap
+	return [accuracy/data_size, f1/data_size, precision/data_size, recall/data_size, auc]
 
 def compute_test(model, loader, device=torch.device('cpu'), verbose=False):
 	model.eval()
@@ -63,4 +61,6 @@ def compute_test(model, loader, device=torch.device('cpu'), verbose=False):
 			out_log.append([F.softmax(out, dim=1), y])
 			loss_test += F.nll_loss(out, y).item()
 	loss_test /= len(loader)
-	return eval_deep(out_log, loader), loss_test
+	res = eval_deep(out_log, loader)
+	res.append(loss_test)
+	return res

@@ -4,17 +4,15 @@ from tqdm import trange
 import torch.nn.functional as F
 from torch.utils.data import random_split
 from torch_geometric.data import DataLoader
-from torch.nn import Linear
-from torch_geometric.nn import global_mean_pool, GATConv
 import torch
 import pandas as pd
 from tabulate import tabulate
-import numpy as np
+import dataframe_image as dfi
 
 from os.path import dirname
 sys.path.append(dirname(dirname(__file__)))
 
-from utils.dataloader import DropEdge, ToUndirected, FNNDataset
+from utils.dataloader import ToUndirected, FNNDataset
 from models.architectures import GCNFN, SimpleGNN
 from utils.train import train
 from utils.eval import compute_test
@@ -63,18 +61,27 @@ if __name__ == '__main__':
 	val_loader = DataLoader(validation_set, batch_size=args.batch_size, shuffle=False)
 	test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=False)
 	
-	if args.model == 'gcnfn':
-		model = GCNFN(args=args)
-	else:
-		model = SimpleGNN(args)
-	model = model.to(args.device)
+	models = ["gcnfn", "gcn", "gat", "graphsage"]
+	features = ["profile", "spacy", "bert", "content"]
 
-	best_results = train(model, train_loader, val_loader, args)
-	best_results_df = pd.DataFrame([best_results])
-	print("Validation Results")
-	print(tabulate(best_results_df, headers='keys', tablefmt='psql'))
+	for model_name in models:
+		list_results = []
 
-	test_results = compute_test(model, test_loader, args.device, verbose=False)
-	test_results_df = pd.DataFrame([test_results], columns=["Accuracy", "F1", "Precision", "Recall", "AUC", "Loss"])
-	print("Test Results")
-	print(tabulate(test_results_df, headers='keys', tablefmt='psql'))
+		for feature in features:
+			args.model = model_name
+			args.feature = feature
+		
+			if args.model == 'gcnfn':
+				model = GCNFN(args=args)
+			else:
+				model = SimpleGNN(args)
+			model = model.to(args.device)
+
+			best_results = train(model, train_loader, val_loader, args)
+			list_results.append(best_results)
+			
+			[acc, f1, precision, recall, auc, test_loss] = compute_test(model, test_loader, args.device, verbose=False)
+		
+		best_results_df = pd.DataFrame(list_results, index=features)
+		print(tabulate(best_results_df, headers='keys', tablefmt='psql'))
+		dfi.export(best_results_df, f"./reports/figures/{model_name}/results.png")
