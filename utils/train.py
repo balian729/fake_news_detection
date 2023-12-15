@@ -53,6 +53,7 @@ def train(model, train_loader, val_loader, args):
 			best_metrics["auc"] = auc_val
 			best_metrics["F1"] = f1_val
 			best_metrics["loss"] = loss_val
+			torch.save(model.state_dict(), f'models/weights/{args.model}_best.pth')
 
 		loop.set_postfix(
 			loss_train=loss_train,

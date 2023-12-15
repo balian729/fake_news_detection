@@ -25,7 +25,7 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 
 	# original model parameters
-	parser.add_argument('--device', type=str, default='cuda:0', help='specify cuda devices')
+	parser.add_argument('--device', type=str, default='cpu', help='specify cuda devices')
 
 	# hyper-parameters
 	parser.add_argument('--batch_size', type=int, default=128, help='batch size')
@@ -74,6 +74,7 @@ if __name__ == '__main__':
 	print("Validation Results")
 	print(tabulate(best_results_df, headers='keys', tablefmt='psql'))
 
+	model.load_state_dict(torch.load(f'./models/weights/{args.model}_best.pth'))
 	test_results = compute_test(model, test_loader, args.device, verbose=False)
 	test_results_df = pd.DataFrame([test_results], columns=["Accuracy", "F1", "Precision", "Recall", "AUC", "Loss"])
 	print("Test Results")
