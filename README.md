@@ -24,3 +24,7 @@ For evaluation, we used four models that include:
 !pip install torch-sparse -f https://pytorch-geometric.com/whl/torch-2.1.0+cu121.html
 !pip install torch-geometric
 ```
+## Train model
+```
+python models/train.py
+```
