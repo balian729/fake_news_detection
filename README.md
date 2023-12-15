@@ -14,3 +14,17 @@ For evaluation, we used four models that include:
 * GAT
 * GraphSAGE
 * GCNFN 
+
+## Basic commands
+```
+!git lfs clone https://github.com/balian729/fake_news_detection.git
+!cd fake_news_detection
+!pip install -r requirements.txt
+!pip install torch-scatter -f https://pytorch-geometric.com/whl/torch-2.1.0+cu121.html
+!pip install torch-sparse -f https://pytorch-geometric.com/whl/torch-2.1.0+cu121.html
+!pip install torch-geometric
+```
+## Train model
+```
+python models/train.py
+```
